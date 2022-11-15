@@ -9,6 +9,7 @@
 <body>
 
 {{!-- Navigation links --}}
+
 <nav>
     <h4>Node MySQL Login</h4>
     <ul>
@@ -18,17 +19,20 @@
     </ul>
 </nav>
 
-{{!-- Body of each page will go here --}}
+{{!-- Body --}}
 
 <form action="/auth/register" method="POST">
     <h2>Register</h2>
     <div class="input-field">
+        <label for="username">Username:</label>
         <input type="text" name="username" id="username" placeholder="Enter Username">
     </div>
     <div class="input-field">
+        <label for="email">Email:</label>
         <input type="text" name="email" id="email" placeholder="Enter Email">
     </div>
     <div class="input-field">
+        <label for="password">Password:</label>
         <input type="password" name="password" id="password" placeholder="Enter Password">
     </div>
     <input type="submit" value="LogIn">
