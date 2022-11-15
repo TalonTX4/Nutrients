@@ -50,29 +50,29 @@ app.get("/", (req, res) => {
     res.render("index")
 })
 
-app.post("/auth/register", (req, res) => {
-    const { username, email, password } = req.body
+app.post("/auth/register", async (req, res) => {
+    const {username, email, password} = req.body
 
-    db.query('SELECT email FROM users WHERE email = ?', [email], async (error) => {
-        if(error){
-            console.log(error)
-        }
-        // fixme no check to prevent email reuse
+    // fixme no password confirmation
 
-        // fixme no password confirmation
-        let hashedPassword = await bcrypt.hash(password, 8)
+    let hashedPassword = await bcrypt.hash(password, 8)
 
-        console.log(hashedPassword)
+    console.log(hashedPassword)
 
-        db.query('INSERT INTO users SET?', {name: username, email: email, password: hashedPassword}, (error) => {
-            if(error) {
-                console.log(error)
-            } else {
+    db.query('INSERT INTO users SET?', {name: username, email: email, password: hashedPassword}, (error) => {
+        if (error) {
+            if(error.code === "ER_DUPE_ENTRY") {
                 return res.render('register', {
-                    message: 'User registered!'
+                    message: 'User already exists, try again'
                 })
+            } else {
+                console.log(error)
             }
-        })
+        } else {
+            return res.render('register', {
+                message: 'User registered!'
+            })
+        }
     })
 })
 
