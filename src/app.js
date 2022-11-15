@@ -4,6 +4,10 @@ const mysql = require("mysql")
 const bcrypt = require("bcryptjs")
 const sessions = require("express-session")
 
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 const app = express();
 
 // creating 24 hours from milliseconds
@@ -19,16 +23,16 @@ app.use(express.json())
 app.use(express.static(publicDir))
 
 app.use(sessions({
-    secret: "thisIsMySecretKey",
+    secret: process.env.SESSIONSECRET,
     saveUninitialized:true,
     cookie: { maxAge: oneDay },
     resave: false
 }))
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "Joseph",
-    password: "987521741859875275391",
+    host: process.env.DBHOST,
+    user: process.env.DBUSER,
+    password: process.env.DBPASSWORD,
     database: "Nutrients"
 })
 
