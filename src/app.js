@@ -7,6 +7,7 @@ const sessions = require("express-session")
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
+let session;
 
 const app = express();
 
@@ -15,6 +16,7 @@ const oneDay = 1000 * 60 * 60 * 24;
 
 // other imports
 const path = require("path")
+
 
 const publicDir = path.join(__dirname, './public')
 
@@ -44,10 +46,15 @@ db.connect((error) => {
     }
 })
 
+// TODO improve robustness of isLoggedIn
+let isLoggedIn;
+
 app.set('view engine', 'hbs')
 
 app.get("/", (req, res) => {
-    res.render("index")
+    res.render("index", {
+        loggedIn: isLoggedIn
+    })
 })
 
 app.post("/auth/register", async (req, res) => {
@@ -63,14 +70,16 @@ app.post("/auth/register", async (req, res) => {
                 if (error) {
                     if(error.code === "ER_DUPE_ENTRY") {
                         return res.render('register', {
-                            message: 'User already exists, try again'
+                            message: 'User already exists, try again',
+                            loggedIn: isLoggedIn
                         })
                     } else {
                         console.log(error)
                     }
                 } else {
                     return res.render('register', {
-                        message: 'User registered!'
+                        message: 'User registered!',
+                        loggedIn: isLoggedIn
                     })
                 }
             })
@@ -92,16 +101,27 @@ app.post("/auth/login", (req, res ) => {
 
             bcrypt.compare(password, hash, function(err, result) {
                 if (result) {
+                    session = req.session;
+                    session.username = req.body.username;
+                    session.loggedin = true;
+                    db.query('SELECT id FROM users WHERE name = ?', [username], (error, result) => {
+                        let dbIDObj = JSON.parse(JSON.stringify(result[0]));
+                        session.userid = dbIDObj.id
+                        console.log(req.session)
+                    })
+                    isLoggedIn = true
                     return res.redirect("/")
                 } else {
                     return res.render('login', {
-                        message: 'Invalid username or password'
+                        message: 'Invalid username or password',
+                        loggedIn: isLoggedIn
                     })
                 }
             });
         } else {
             return res.render('login', {
-                message: 'Invalid username or password'
+                message: 'Invalid username or password',
+                loggedIn: isLoggedIn
             })
         }
 
@@ -109,12 +129,22 @@ app.post("/auth/login", (req, res ) => {
 
 })
 
+app.get('/logout',(req,res) => {
+    req.session.destroy();
+    isLoggedIn = false;
+    res.redirect('/');
+});
+
 app.get("/register", (req, res) => {
-    res.render("register")
+    res.render("register", {
+        loggedIn: isLoggedIn
+    })
 })
 
 app.get("/login", (req, res) => {
-    res.render("login")
+    res.render("login", {
+        loggedIn: isLoggedIn
+    })
 })
 
 app.listen(5000, ()=> {

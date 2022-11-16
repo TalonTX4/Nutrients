@@ -14,8 +14,12 @@
     <h4>Navigation: </h4>
     <ul>
         <li><a href="/">Home</a></li>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/register">Register</a></li>
+        {{#if loggedIn}}
+            <li><a href="/logout">logout</a></li>
+        {{else}}
+            <li><a href="/login">Login</a></li>
+            <li><a href="/register">Register</a></li>
+        {{/if}}
     </ul>
 </nav>
 
@@ -23,8 +27,13 @@
 
 <div>
     <div>
-        <h1>My Luke Project</h1>
-        <p>This is a multifaceted project for my friend luke, made for the purpose of improving my ability to code larger projects</p>
+        {{#if loggedIn}}
+            <h1>My Luke Project</h1>
+            <p>This is a multifaceted project for my friend luke, made for the purpose of improving my ability to code larger projects</p>
+        {{else}}
+            <h1>please login</h1>
+            <p>This is a page that will only display if you have failed to login to demonstrate alternative text</p>
+        {{/if}}
     </div>
 </div>
 </body>
