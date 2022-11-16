@@ -129,6 +129,16 @@ app.post("/auth/login", (req, res ) => {
 
 })
 
+app.get("/account", (req,res) => {
+    if (isLoggedIn === false) {
+        res.redirect("/",)
+    } else {
+        res.render("account page", {
+            name: session.username
+        })
+    }
+})
+
 app.get('/logout',(req,res) => {
     req.session.destroy();
     isLoggedIn = false;
