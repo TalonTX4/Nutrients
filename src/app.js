@@ -54,26 +54,59 @@ app.post("/auth/register", async (req, res) => {
     const {username, email, password} = req.body
 
     // fixme no password confirmation
-
-    let hashedPassword = await bcrypt.hash(password, 8)
-
-    console.log(hashedPassword)
-
-    db.query('INSERT INTO users SET?', {name: username, email: email, password: hashedPassword}, (error) => {
-        if (error) {
-            if(error.code === "ER_DUPE_ENTRY") {
-                return res.render('register', {
-                    message: 'User already exists, try again'
-                })
-            } else {
+    bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(password, salt, function(error, hash) {
+            if (error) {
                 console.log(error)
             }
+            db.query('INSERT INTO users SET?', {name: username, email: email, password: hash}, (error) => {
+                if (error) {
+                    if(error.code === "ER_DUPE_ENTRY") {
+                        return res.render('register', {
+                            message: 'User already exists, try again'
+                        })
+                    } else {
+                        console.log(error)
+                    }
+                } else {
+                    return res.render('register', {
+                        message: 'User registered!'
+                    })
+                }
+            })
+        });
+    })
+
+
+})
+
+app.post("/auth/login", (req, res ) => {
+    const {username, password} = req.body
+    db.query('SELECT password FROM users WHERE name = ?', [username], (error, result) => {
+        if (error) {
+            console.log(error)
+        }
+        if (result.length >= 1) {
+            let dbPassObj = JSON.parse(JSON.stringify(result[0]));
+            let hash = dbPassObj.password
+
+            bcrypt.compare(password, hash, function(err, result) {
+                if (result) {
+                    return res.redirect("/")
+                } else {
+                    return res.render('login', {
+                        message: 'Invalid username or password'
+                    })
+                }
+            });
         } else {
-            return res.render('register', {
-                message: 'User registered!'
+            return res.render('login', {
+                message: 'Invalid username or password'
             })
         }
+
     })
+
 })
 
 app.get("/register", (req, res) => {
