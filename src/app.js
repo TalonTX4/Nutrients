@@ -17,7 +17,6 @@ const oneDay = 1000 * 60 * 60 * 24;
 // other imports
 const path = require("path")
 
-
 const publicDir = path.join(__dirname, './public')
 
 app.use(express.urlencoded({extended: 'false'}))
@@ -47,14 +46,35 @@ db.connect((error) => {
 })
 
 // TODO improve robustness of isLoggedIn
-let isLoggedIn;
+let isLoggedIn = false;
+
+// TODO move function to own file
+function renderPage(responseBody, path, message) {
+    let id = -1
+    let name = "Error Name not found"
+    let pageMessage = ""
+    if (isLoggedIn === true) {
+        id = session.id
+        name = session.username
+    }
+
+    if (message !== null) {
+        pageMessage = message
+    }
+
+    return responseBody.render(path, {
+        message: pageMessage,
+        loggedIn: isLoggedIn,
+        name: name,
+        id: id
+    })
+}
+
 
 app.set('view engine', 'hbs')
 
 app.get("/", (req, res) => {
-    res.render("index", {
-        loggedIn: isLoggedIn
-    })
+    renderPage(res, "login")
 })
 
 app.post("/auth/register", async (req, res) => {
@@ -69,24 +89,16 @@ app.post("/auth/register", async (req, res) => {
             db.query('INSERT INTO users SET?', {name: username, email: email, password: hash}, (error) => {
                 if (error) {
                     if(error.code === "ER_DUPE_ENTRY") {
-                        return res.render('register', {
-                            message: 'User already exists, try again',
-                            loggedIn: isLoggedIn
-                        })
+                        renderPage(res, "register", "User already exists, try again")
                     } else {
                         console.log(error)
                     }
                 } else {
-                    return res.render('register', {
-                        message: 'User registered!',
-                        loggedIn: isLoggedIn
-                    })
+                    renderPage(res, "register", "User registered!")
                 }
             })
         });
     })
-
-
 })
 
 app.post("/auth/login", (req, res ) => {
@@ -112,17 +124,11 @@ app.post("/auth/login", (req, res ) => {
                     isLoggedIn = true
                     return res.redirect("/")
                 } else {
-                    return res.render('login', {
-                        message: 'Invalid username or password',
-                        loggedIn: isLoggedIn
-                    })
+                    renderPage(res, "login", "Invalid username or password")
                 }
             });
         } else {
-            return res.render('login', {
-                message: 'Invalid username or password',
-                loggedIn: isLoggedIn
-            })
+            renderPage(res, "login", "Invalid username or password")
         }
 
     })
@@ -134,7 +140,7 @@ app.get("/account", (req,res) => {
         res.redirect("/",)
     } else {
         res.render("account page", {
-            name: session.username
+
         })
     }
 })
@@ -146,15 +152,11 @@ app.get('/logout',(req,res) => {
 });
 
 app.get("/register", (req, res) => {
-    res.render("register", {
-        loggedIn: isLoggedIn
-    })
+    renderPage(res, "register")
 })
 
 app.get("/login", (req, res) => {
-    res.render("login", {
-        loggedIn: isLoggedIn
-    })
+    renderPage(res, "login")
 })
 
 app.listen(5000, ()=> {
