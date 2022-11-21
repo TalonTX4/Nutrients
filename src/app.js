@@ -3,26 +3,32 @@ const express = require('express');
 const mysql = require("mysql")
 const bcrypt = require("bcryptjs")
 const sessions = require("express-session")
+const path = require("path")
 
+
+// only use .env if not in production
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
+
+//definitions
 let session;
-
+// TODO improve robustness of isLoggedIn
+let isLoggedIn = false;
+const port = process.env.HOSTPORT;
 const app = express();
-
-// creating 24 hours from milliseconds
 const oneDay = 1000 * 60 * 60 * 24;
-
-// other imports
-const path = require("path")
-
 const publicDir = path.join(__dirname, './public')
 
+
+// other imports
+
+
+
+// app configuration
 app.use(express.urlencoded({extended: 'false'}))
 app.use(express.json())
 app.use(express.static(publicDir))
-
 app.use(sessions({
     secret: process.env.SESSIONSECRET,
     saveUninitialized:true,
@@ -30,6 +36,8 @@ app.use(sessions({
     resave: false
 }))
 
+
+// initialize database
 const db = mysql.createConnection({
     host: process.env.DBHOST,
     user: process.env.DBUSER,
@@ -37,6 +45,8 @@ const db = mysql.createConnection({
     database: "Nutrients"
 })
 
+
+// connect to database
 db.connect((error) => {
     if(error) {
         console.log(error)
@@ -45,10 +55,8 @@ db.connect((error) => {
     }
 })
 
-// TODO improve robustness of isLoggedIn
-let isLoggedIn = false;
 
-// TODO move function to own file
+// function for page rendering to dry code
 function renderPage(responseBody, path, message) {
     let id = -1
     let name = "Error Name not found"
@@ -75,6 +83,10 @@ app.set('view engine', 'hbs')
 
 app.get("/", (req, res) => {
     renderPage(res, "login")
+})
+
+app.get("/register", (req, res) => {
+    renderPage(res, "register")
 })
 
 app.post("/auth/register", async (req, res) => {
@@ -151,14 +163,12 @@ app.get('/logout',(req,res) => {
     res.redirect('/');
 });
 
-app.get("/register", (req, res) => {
-    renderPage(res, "register")
-})
-
 app.get("/login", (req, res) => {
     renderPage(res, "login")
 })
 
-app.listen(5000, ()=> {
-    console.log("server started on port 5000")
+
+// initialize app on port from environment
+app.listen(port, ()=> {
+    console.log("server started on port: " + port)
 });
