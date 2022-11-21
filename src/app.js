@@ -84,7 +84,7 @@ app.get("/register", (req, res) => {
     renderPage(res,response)
 })
 
-app.post("/auth/register", async (req, res) => {
+app.post("/auth/register", (req, res) => {
     let response = responseRouter.register.auth(req, res, db)
     renderPage(res,response)
 })
