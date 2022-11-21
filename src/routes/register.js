@@ -26,7 +26,7 @@ function auth(request, response, mySql){
     })
 }
 
-function normal(request, response, mySql) {
+function normal() {
     let rendArray = ["register",""];
     return rendArray
 }
