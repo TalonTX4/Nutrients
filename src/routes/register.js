@@ -2,7 +2,7 @@
 const bcrypt = require("bcryptjs")
 
 function auth(request, response, mySql){
-    let rendArray = ["",""]
+    let rendArray = ["register",""]
     const {username, email, password} = request.body
     bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, function(error, hash) {
@@ -12,13 +12,13 @@ function auth(request, response, mySql){
             mySql.query('INSERT INTO users SET?', {name: username, email: email, password: hash}, (error) => {
                 if (error) {
                     if(error.code === "ER_DUPE_ENTRY") {
-                        rendArray = ["register","User already exists, try again"]
+                        rendArray[1] = "User already exists, try again"
                         return rendArray
                     } else {
                         console.log(error)
                     }
                 } else {
-                    rendArray = ["register","User registered!"]
+                    rendArray[1] = "User registered!"
                     return rendArray
                 }
             })
@@ -27,8 +27,7 @@ function auth(request, response, mySql){
 }
 
 function normal(request, response, mySql) {
-    let rendArray = ["",""];
-    rendArray[0] = "register"
+    let rendArray = ["register",""];
     return rendArray
 }
 
