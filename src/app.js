@@ -80,7 +80,7 @@ app.get("/", (req, res) => {
 })
 
 app.get("/register", (req, res) => {
-    let response = responseRouter.register.normal(req, res, db)
+    let response = responseRouter.register.normal()
     renderPage(res,response)
 })
 
@@ -89,38 +89,19 @@ app.post("/auth/register", (req, res) => {
     renderPage(res,response)
 })
 
+app.get("/login", (req, res) => {
+    let response = responseRouter.login.normal()
+    renderPage(res,response)
+})
+
 app.post("/auth/login", (req, res ) => {
-    const {username, password} = req.body
-    db.query('SELECT password FROM users WHERE name = ?', [username], (error, result) => {
-        if (error) {
-            console.log(error)
-        }
-        if (result.length >= 1) {
-            let dbPassObj = JSON.parse(JSON.stringify(result[0]));
-            let hash = dbPassObj.password
-
-            bcrypt.compare(password, hash, function(err, result) {
-                if (result) {
-                    session = req.session;
-                    session.username = req.body.username;
-                    session.loggedin = true;
-                    db.query('SELECT id FROM users WHERE name = ?', [username], (error, result) => {
-                        let dbIDObj = JSON.parse(JSON.stringify(result[0]));
-                        session.userid = dbIDObj.id
-                        console.log(req.session)
-                    })
-                    isLoggedIn = true
-                    return res.redirect("/")
-                } else {
-                    renderPage(res, "login", "Invalid username or password")
-                }
-            });
-        } else {
-            renderPage(res, "login", "Invalid username or password")
-        }
-
-    })
-
+    let response = responseRouter.login.auth(req, res, db, session)
+    if(response[2] == true){
+        isLoggedIn = true
+        return res.redirect("/")
+    } else {
+        renderPage(res,response)
+    }
 })
 
 app.get("/account", (req,res) => {
@@ -139,9 +120,7 @@ app.get('/logout',(req,res) => {
     res.redirect('/');
 });
 
-app.get("/login", (req, res) => {
-    renderPage(res, "login")
-})
+
 
 
 // initialize app on port from environment
